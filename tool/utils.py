@@ -6,11 +6,12 @@ import torch
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 from torch.autograd import Variable
-
+import cv2
 import itertools
 import struct  # get_image_size
 import imghdr  # get_image_size
 
+videoFrameList=[]
 
 def sigmoid(x):
     return 1.0 / (np.exp(-x) + 1.)
@@ -371,6 +372,58 @@ def plot_boxes(img, boxes, savename=None, class_names=None):
         img.save(savename)
     return img
 
+############################################################
+def gen_video(img, boxes, class_names=None):
+    global videoFrameList
+    colors = torch.FloatTensor([[1, 0, 1], [0, 0, 1], [0, 1, 1], [0, 1, 0], [1, 1, 0], [1, 0, 0]]);
+
+    def get_color(c, x, max_val):
+        ratio = float(x) / max_val * 5
+        i = int(math.floor(ratio))
+        j = int(math.ceil(ratio))
+        ratio = ratio - i
+        r = (1 - ratio) * colors[i][c] + ratio * colors[j][c]
+        return int(r * 255)
+
+    width = img.width
+    height = img.height
+    draw = ImageDraw.Draw(img)
+    for i in range(len(boxes)):
+        box = boxes[i]
+        x1 = (box[0] - box[2] / 2.0) * width
+        y1 = (box[1] - box[3] / 2.0) * height
+        x2 = (box[0] + box[2] / 2.0) * width
+        y2 = (box[1] + box[3] / 2.0) * height
+
+        rgb = (255, 0, 0)
+        if len(box) >= 7 and class_names:
+            cls_conf = box[5]
+            cls_id = box[6]
+            print('%s: %f' % (class_names[cls_id], cls_conf))
+            classes = len(class_names)
+            offset = cls_id * 123457 % classes
+            red = get_color(2, offset, classes)
+            green = get_color(1, offset, classes)
+            blue = get_color(0, offset, classes)
+            rgb = (red, green, blue)
+            draw.text((x1, y1), class_names[cls_id], fill=rgb)
+        draw.rectangle([x1, y1, x2, y2], outline=rgb)
+    # if savename:
+    #     print("save plot results to %s" % savename)
+    #     img.save(savename)
+    videoFrameList.append(img)
+    print("######################## Frame added to video ###############################")
+    return img
+
+def save_video(name,codec,fps,width,height):
+    global videoFrameList
+    video= cv2.VideoWriter(name,codec,fps,(width,height))
+    for frame in videoFrameList:
+        # print(type(frame))
+        video.write(np.array(frame))
+    video.release()
+
+############################################################
 
 def read_truths(lab_path):
     if not os.path.exists(lab_path):
