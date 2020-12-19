@@ -13,12 +13,21 @@
 import json
 from collections import defaultdict
 from tqdm import tqdm
+from math import ceil,floor
 import os
+import sys
+
+if len(sys.argv)<5:
+    print("Usage: \n python3 coco_annotation.py input_json_path images_dir_path input_image_width input_image_height")
+    exit()
+
 
 """hyper parameters"""
-json_file_path = 'E:/Dataset/coco2017/annotations_trainval2017/annotations/instances_val2017.json'
-images_dir_path = 'mscoco2017/train2017/'
-output_path = '../data/val.txt'
+json_file_path = sys.argv[1]
+images_dir_path = sys.argv[2]
+output_path = '_annotations.txt'
+xrat=float(415/int(sys.argv[3]))
+yrat=float(415/int(sys.argv[4]))
 
 """load json file"""
 name_box_id = defaultdict(list)
@@ -31,7 +40,7 @@ images = data['images']
 annotations = data['annotations']
 for ant in tqdm(annotations):
     id = ant['image_id']
-    name = os.path.join(images_dir_path, images[id]['file_name'])
+    name = os.path.join(id+'.jpg')
     cat = ant['category_id']
 
     if cat >= 1 and cat <= 11:
@@ -67,6 +76,6 @@ with open(output_path, 'w') as f:
             y_max = y_min + int(info[0][3])
 
             box_info = " %d,%d,%d,%d,%d" % (
-                x_min, y_min, x_max, y_max, int(info[1]))
+                floor(x_min*xrat), floor(y_min*yrat), floor(x_max*xrat), floor(y_max*yrat), int(info[1]))
             f.write(box_info)
         f.write('\n')
