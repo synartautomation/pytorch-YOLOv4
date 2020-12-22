@@ -1,0 +1,1 @@
+Place Validation images, _annotations.txt and _classes.txt in this folder
