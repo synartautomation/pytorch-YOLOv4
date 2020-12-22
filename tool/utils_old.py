@@ -442,12 +442,7 @@ def load_class_names(namesfile):
         lines = fp.readlines()
     for line in lines:
         line = line.rstrip()
-        if line in ["Hatchback","Police","Sedan","SUV","Taxi","Minivan"]:
-            class_names.append("Car")
-        elif line in ["Truck-Box-Large","Truck-Box-Med","Truck-Flatbed","Truck-Pickup","Truck-Util"]:
-            class_names.append("Truck")
-        else:
-            class_names.append(line)
+        class_names.append(line)
     return class_names
 
 
