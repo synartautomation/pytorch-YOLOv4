@@ -10,9 +10,11 @@ import cv2
 import itertools
 import struct  # get_image_size
 import imghdr  # get_image_size
+sys.path.append('/home/prithvi/Documents/pytorch-YOLOv4/tool')
+from tracker.centroidtracker import CentroidTracker
 
 videoFrameList=[]
-
+ct =CentroidTracker()
 def sigmoid(x):
     return 1.0 / (np.exp(-x) + 1.)
 
@@ -347,13 +349,15 @@ def plot_boxes(img, boxes, savename=None, class_names=None):
     width = img.width
     height = img.height
     draw = ImageDraw.Draw(img)
+    ctboxes=[]
     for i in range(len(boxes)):
         box = boxes[i]
         x1 = (box[0] - box[2] / 2.0) * width
         y1 = (box[1] - box[3] / 2.0) * height
         x2 = (box[0] + box[2] / 2.0) * width
         y2 = (box[1] + box[3] / 2.0) * height
-
+        ctbox= (x1,y1,x2,y2)
+        ctboxes.append(ctbox)
         rgb = (255, 0, 0)
         if len(box) >= 7 and class_names:
             cls_conf = box[5]
@@ -367,6 +371,11 @@ def plot_boxes(img, boxes, savename=None, class_names=None):
             rgb = (red, green, blue)
             draw.text((x1, y1), class_names[cls_id], fill=rgb)
         draw.rectangle([x1, y1, x2, y2], outline=rgb)
+########################################################################################        
+    objects= ct.update(ctboxes)
+    for (objectID, centroid) in objects.items():
+        draw.text((centroid[0],centroid[1]),"X",fill=rgb)
+#########################################################################################
     if savename:
         print("save plot results to %s" % savename)
         img.save(savename)
